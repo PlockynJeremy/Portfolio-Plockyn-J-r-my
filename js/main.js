@@ -2,7 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- PHOTO HERO ---
   window.addEventListener('load', () => {
     const heroPhoto = document.getElementById('heroPhoto');
     const heroPlaceholder = document.getElementById('heroPlaceholder');
@@ -147,3 +146,51 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
 });
+
+const shots = document.querySelectorAll('.screenshot-grid .shot');
+  if (shots.length) {
+    const images = Array.from(shots).map(s => ({
+      src: s.querySelector('img').src,
+      caption: s.querySelector('figcaption')?.textContent || ''
+    }));
+
+    const lightbox = document.createElement('div');
+    lightbox.className = 'lightbox';
+    lightbox.innerHTML = `
+      <button class="lightbox-close" aria-label="Fermer">×</button>
+      <button class="lightbox-prev" aria-label="Précédent">‹</button>
+      <button class="lightbox-next" aria-label="Suivant">›</button>
+      <img src="" alt="" />
+      <p class="lightbox-caption"></p>
+    `;
+    document.body.appendChild(lightbox);
+
+    const lbImg = lightbox.querySelector('img');
+    const lbCap = lightbox.querySelector('.lightbox-caption');
+    let currentIdx = 0;
+
+    const show = (idx) => {
+      currentIdx = (idx + images.length) % images.length;
+      lbImg.src = images[currentIdx].src;
+      lbCap.textContent = images[currentIdx].caption;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+    const closeLB = () => {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    shots.forEach((shot, i) => shot.addEventListener('click', (e) => { e.preventDefault(); show(i); }));
+    lightbox.querySelector('.lightbox-close').addEventListener('click', (e) => { e.stopPropagation(); closeLB(); });
+    lightbox.querySelector('.lightbox-prev').addEventListener('click', (e) => { e.stopPropagation(); show(currentIdx - 1); });
+    lightbox.querySelector('.lightbox-next').addEventListener('click', (e) => { e.stopPropagation(); show(currentIdx + 1); });
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox || e.target === lbImg) closeLB(); });
+
+    document.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLB();
+      if (e.key === 'ArrowLeft') show(currentIdx - 1);
+      if (e.key === 'ArrowRight') show(currentIdx + 1);
+    });
+  }
